@@ -46,7 +46,7 @@ jobs:
           MANIFEST_PATH="apps/cose451/01-deployment.yaml" 
 
           echo "Updating image tag to $NEW_IMAGE"
-          sed -i "s|image: $REGISTRY/cose451:.*|image: $NEW_IMAGE|g" $MANIFEST_PATH
+          sed -i "s|\(image: .*/cose451:\).*|\1$IMAGE_TAG|g" $MANIFEST_PATH
 
           if [[ -n $(git status -s) ]]; then
             git config user.name "GitHub Actions Bot"
