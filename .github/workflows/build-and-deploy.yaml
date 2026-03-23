@@ -1,0 +1,59 @@
+name: Build and Update Manifest
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+
+jobs:
+  build-and-update:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout App Repository
+        uses: actions/checkout@v4
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)
+
+          REGISTRY="registry.registry.svc.cluster.local:5000"
+          IMAGE_NAME="$REGISTRY/cose451:$IMAGE_TAG"
+
+          echo "Building image: $IMAGE_NAME"
+
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Checkout Manifest Repository
+        uses: actions/checkout@v4
+        with:
+          repository: arcde40/argocd-repo
+          ref: main
+          token: ${{ secrets.ARGOCD_PAT }}
+          path: manifest-repo
+
+      - name: Update Manifest and Push
+        run: |
+          IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)
+          REGISTRY="registry.registry.svc.cluster.local:5000"
+          NEW_IMAGE="$REGISTRY/cose451:$IMAGE_TAG"
+
+          cd manifest-repo
+
+          MANIFEST_PATH="apps/cose451/01-deployment.yaml" 
+
+          echo "Updating image tag to $NEW_IMAGE"
+          sed -i "s|image: $REGISTRY/cose451:.*|image: $NEW_IMAGE|g" $MANIFEST_PATH
+
+          if [[ -n $(git status -s) ]]; then
+            git config user.name "GitHub Actions Bot"
+            git config user.email "actions@github.com"
+            git add $MANIFEST_PATH
+            git commit -m "chore(cose451): update image tag to $IMAGE_TAG"
+            git push origin main
+          else
+            echo "No changes to commit."
+          fi
