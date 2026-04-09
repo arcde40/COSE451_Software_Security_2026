@@ -14,6 +14,8 @@ RUN adduser $user
 
 ADD ./Class/. /home/$user/Class/
 ADD ./Stage0_Debug_Me/. /home/$user/Stage0_Debug_Me/
+ADD ./Stage1_Line_Cutting/. /home/$user/Stage1_Line_Cutting/
+ADD ./Stage2_Store_Breach/. /home/$user/Stage2_Store_Breach/
 
 
 WORKDIR /home/$user/
@@ -33,6 +35,9 @@ RUN chmod 660 /home/$user/Class/*/*.c
 
 
 RUN chmod +x /home/$user/Stage0_Debug_Me/*
+RUN chmod +x /home/$user/Stage1_Line_Cutting/*
+RUN chmod +x /home/$user/Stage2_Store_Breach/*
+
 
 
 RUN chown -R $user:$user /home/$user/*
